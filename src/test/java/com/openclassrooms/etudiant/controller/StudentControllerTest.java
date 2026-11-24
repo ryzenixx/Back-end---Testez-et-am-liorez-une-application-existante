@@ -2,6 +2,7 @@ package com.openclassrooms.etudiant.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.etudiant.dto.StudentRequestDTO;
+import com.openclassrooms.etudiant.dto.StudentResponseDTO;
 import com.openclassrooms.etudiant.repository.StudentRepository;
 import com.openclassrooms.etudiant.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -11,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -18,6 +20,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.testcontainers.junit.jupiter.Container;
@@ -35,6 +38,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -57,6 +61,8 @@ class StudentControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
+    private JdbcTemplate jdbcTemplate;
+    @Autowired
     private StudentRepository studentRepository;
     @Autowired
     private UserRepository userRepository;
@@ -75,6 +81,22 @@ class StudentControllerTest {
     void clearDatabase() {
         studentRepository.deleteAll();
         userRepository.deleteAll();
+    }
+
+    @Test
+    void listsStudentsInIdOrder() throws Exception {
+        StudentResponseDTO camille = new StudentResponseDTO(42L, "Camille", "Martin", "camille.martin@example.org");
+        StudentResponseDTO alex = new StudentResponseDTO(7L, "Alex", "Durand", "alex.durand@example.org");
+        // Insert the higher ID first so the expected order is independent of insertion order.
+        jdbcTemplate.update("""
+                INSERT INTO student (id, first_name, last_name, email)
+                VALUES (?, ?, ?, ?), (?, ?, ?, ?)
+                """, camille.id(), camille.firstName(), camille.lastName(), camille.email(),
+                alex.id(), alex.firstName(), alex.lastName(), alex.email());
+
+        mockMvc.perform(get(STUDENTS_URL).header(HttpHeaders.AUTHORIZATION, "Bearer " + login()))
+                .andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(List.of(alex, camille)), JsonCompareMode.STRICT));
     }
 
     @Test
