@@ -1,0 +1,9 @@
+name: Local
+variables:
+  - name: baseUrl
+    value: http://127.0.0.1:8080
+  - name: agentLogin
+    value: agent.p2
+  - secret: true
+    name: agentPassword
+    description: ""

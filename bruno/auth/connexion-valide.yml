@@ -1,0 +1,27 @@
+info:
+  name: Connexion valide
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/login"
+  body:
+    type: json
+    data: |-
+      {
+        "login": "{{agentLogin}}",
+        "password": "{{agentPassword}}"
+      }
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+  scripts:
+    - type: tests
+      code: |-
+        test("Renvoie un JWT", () => {
+          expect(res.getBody()).to.match(/^[\w-]+\.[\w-]+\.[\w-]+$/);
+        });

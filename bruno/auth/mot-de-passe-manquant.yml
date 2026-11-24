@@ -1,0 +1,20 @@
+info:
+  name: Mot de passe manquant
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/login"
+  body:
+    type: json
+    data: |-
+      {
+        "login": "{{agentLogin}}"
+      }
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "400"

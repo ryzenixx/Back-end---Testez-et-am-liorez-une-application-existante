@@ -1,0 +1,21 @@
+info:
+  name: Mot de passe incorrect
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/login"
+  body:
+    type: json
+    data: |-
+      {
+        "login": "{{agentLogin}}",
+        "password": "incorrect"
+      }
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "401"

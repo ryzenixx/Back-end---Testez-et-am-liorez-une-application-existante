@@ -1,7 +1,9 @@
 package com.openclassrooms.etudiant.configuration.security;
 
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,11 +15,19 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.util.Assert;
+
+import java.security.SecureRandom;
+import java.util.Base64;
 
 @Configuration
 @EnableWebSecurity
 public class SpringSecurityConfig {
+
+    private static final int HS256_MIN_KEY_BYTES = 32;
 
     @Autowired
     private CustomUserDetailService customUserDetailService;
@@ -38,6 +48,20 @@ public class SpringSecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public JwtEncoder jwtEncoder(@Value("${app.jwt.secret:}") String base64Secret) {
+        byte[] signingKey;
+        if (base64Secret.isBlank()) {
+            signingKey = new byte[HS256_MIN_KEY_BYTES];
+            new SecureRandom().nextBytes(signingKey);
+        } else {
+            signingKey = Base64.getDecoder().decode(base64Secret);
+            Assert.isTrue(signingKey.length >= HS256_MIN_KEY_BYTES,
+                    "APP_JWT_SECRET must encode at least 32 bytes in Base64");
+        }
+        return new NimbusJwtEncoder(new ImmutableSecret<>(signingKey));
     }
 
     @Bean

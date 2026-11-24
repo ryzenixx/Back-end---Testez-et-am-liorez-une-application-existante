@@ -1,0 +1,21 @@
+info:
+  name: Agent inconnu
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/login"
+  body:
+    type: json
+    data: |-
+      {
+        "login": "agent-inconnu",
+        "password": "incorrect"
+      }
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "401"
