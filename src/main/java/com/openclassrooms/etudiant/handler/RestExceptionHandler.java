@@ -1,5 +1,6 @@
 package com.openclassrooms.etudiant.handler;
 
+import com.openclassrooms.etudiant.exception.StudentNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         logError(badCredentialsException);
         return handleExceptionInternal(badCredentialsException, getErrorDetails(badCredentialsException, request),
                 new HttpHeaders(), HttpStatus.UNAUTHORIZED, request);
+    }
+
+    @ExceptionHandler(StudentNotFoundException.class)
+    protected ResponseEntity<Object> handleStudentNotFound(StudentNotFoundException exception, WebRequest request) {
+        return handleExceptionInternal(exception, getErrorDetails(exception, request), new HttpHeaders(),
+                HttpStatus.NOT_FOUND, request);
     }
 
     @ResponseStatus(HttpStatus.FORBIDDEN)

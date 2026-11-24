@@ -20,6 +20,9 @@ runtime:
       operator: eq
       value: "200"
   scripts:
+    - type: after-response
+      code: |-
+        bru.setVar("token", res.getStatus() === 200 ? res.getBody() : "");
     - type: tests
       code: |-
         test("Renvoie un JWT", () => {

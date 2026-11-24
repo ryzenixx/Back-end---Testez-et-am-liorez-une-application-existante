@@ -1,0 +1,27 @@
+info:
+  name: Créer un étudiant
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/students"
+  auth: inherit
+  body:
+    type: json
+    data: |-
+      {
+        "firstName": "Camille",
+        "lastName": "Martin",
+        "email": "camille.martin@example.org"
+      }
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "201"
+  scripts:
+    - type: after-response
+      code: |-
+        bru.setVar("studentId", res.getStatus() === 201 ? String(res.getBody().id) : "");

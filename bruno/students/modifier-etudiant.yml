@@ -1,0 +1,26 @@
+info:
+  name: Modifier un étudiant
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/students/{{studentId}}"
+  auth: inherit
+  body:
+    type: json
+    data: |-
+      {
+        "firstName": "Camille",
+        "lastName": "Durand",
+        "email": "camille.durand@example.org"
+      }
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+    - expression: res.body.lastName
+      operator: eq
+      value: Durand
